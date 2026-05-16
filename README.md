@@ -1,157 +1,309 @@
-# Homework 2 — Image Captioning
+# 🚀 Homework 2 — Image Captioning with Transformers & Attention
 
-**Course:** Deep Network Development 25/26/2 · Eötvös Loránd University  
-**Dataset:** MS COCO Captions 2017  
+### 🧠 Deep Network Development 25/26/2 · Eötvös Loránd University
+
+<p align="center">
+  <img src="https://miro.medium.com/v2/resize:fit:1400/1*3fA77_mLNiJTSgZFhYnU0Q.png" width="850"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.2+-red?style=for-the-badge&logo=pytorch"/>
+  <img src="https://img.shields.io/badge/Transformer-Attention-orange?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Dataset-MS--COCO-green?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/GPU-CUDA%2011.8-success?style=for-the-badge&logo=nvidia"/>
+</p>
 
 ---
 
-## Overview
+# ✨ Project Overview
 
-This repository contains a complete implementation of an **Encoder–Attention–Transformer Decoder** image captioning system trained on MS COCO 2017, plus a comparison against the pre-trained **BLIP** model.
+This project implements a complete **Image Captioning System** using:
 
-### Architecture
+* 🖼️ **CNN Encoder (ResNet-50)**
+* 🎯 **Transformer Decoder with Cross-Attention**
+* 🧠 **Controllable Caption Generation**
+* 🔥 **Attention Heatmap Visualisation**
+* 🚀 **Greedy + Beam Search Decoding**
+* 🤖 Comparison against **BLIP** (`Salesforce/blip-image-captioning-base`)
 
-```
+The model is trained on the **MS COCO 2017 Captions Dataset** and demonstrates how modern attention-based architectures can generate human-like image descriptions.
+
+---
+
+# 🏗️ Architecture
+
+<p align="center">
+  <img src="https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png" width="850"/>
+</p>
+
+```text
 Image
   │
   ▼
-CNNEncoder (ResNet-50, fine-tuned from layer3)
-  │  outputs (B, 196, 2048) spatial patch features
+CNNEncoder (ResNet-50)
+  │  → spatial feature maps
   ▼
-TransformerDecoder
-  ├── Word Embedding + Positional Encoding
-  ├── Control Embedding  (length bucket: short / medium / long / very long)
-  └── N × TransformerDecoderLayer
-        ├── Masked Multi-Head Self-Attention
-        ├── Cross-Attention  →  attention weights saved for heatmap viz
-        └── Feed-Forward Network
-  │
+Transformer Decoder
+  ├── Word Embeddings
+  ├── Positional Encoding
+  ├── Length-Control Embeddings
+  ├── Multi-Head Self Attention
+  ├── Cross Attention
+  └── Feed Forward Network
   ▼
-Vocabulary logits  →  greedy / beam-search caption
+Generated Caption
 ```
-
-### Key features
-
-| Feature | Details |
-|---|---|
-| Encoder | ResNet-50 (ImageNet pre-trained, fine-tuned from `layer3`) |
-| Decoder | 3-layer Transformer, `d_model=512`, 8 heads |
-| Controllable generation | Length-bucket embedding (4 buckets) injected at every decoding step |
-| Cross-attention viz | Per-word heatmaps overlaid on the original image |
-| Decoding | Greedy (default) + beam search |
-| Overfitting prevention | Early stopping, `ReduceLROnPlateau`, label smoothing, gradient clipping |
-| Comparison model | BLIP (`Salesforce/blip-image-captioning-base`) |
 
 ---
 
-## Repository structure
+# 🔥 Features
 
-```
+| 🚀 Feature                  | 📌 Description                                        |
+| --------------------------- | ----------------------------------------------------- |
+| 🧠 Encoder                  | Pretrained ResNet-50 fine-tuned from `layer3`         |
+| 🤖 Decoder                  | 3-layer Transformer Decoder (`d_model=512`, 8 heads)  |
+| 🎛️ Controllable Generation | Length bucket embeddings (short → very long captions) |
+| 👀 Attention Visualisation  | Heatmaps showing where the model looks                |
+| 🔍 Decoding                 | Greedy decoding + Beam Search                         |
+| 🛡️ Regularisation          | Label smoothing, gradient clipping, LR scheduling     |
+| 📊 Evaluation               | BLEU-1/2/3/4 metrics                                  |
+| ⚡ Comparison Model          | BLIP image captioning baseline                        |
+
+---
+
+# 📂 Repository Structure
+
+```bash
 .
-├── Homework_2_Image_Captioning_solved.ipynb   # Main notebook (all code)
-├── Dockerfile                                  # Reproducible GPU environment
-├── requirements.txt                            # Python dependencies
+├── Homework_2_Image_Captioning_solved.ipynb
+├── Dockerfile
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Quick start
+# ⚡ Quick Start
 
-### Option A — Docker (recommended, GPU)
+# 🐳 Option 1 — Docker (Recommended)
 
 ```bash
-# 1. Build the image
+# Build Docker image
 docker build -t image-captioning .
 
-# 2. Run Jupyter Lab (mount a local data folder for COCO)
+# Run container with GPU support
 docker run --gpus all -p 8888:8888 \
     -v $(pwd)/coco:/workspace/coco \
     image-captioning
 ```
 
-Then open `http://localhost:8888` and run `Homework_2_Image_Captioning_solved.ipynb`.
+Then open:
 
-> **CPU-only?** Remove `--gpus all` from the run command. Training will be much slower — consider reducing `TRAIN_SUBSET` to ≤5 000.
+```text
+http://localhost:8888
+```
 
-### Option B — Local virtual environment
+---
+
+# 💻 Option 2 — Local Environment
 
 ```bash
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
+
+# Linux / Mac
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
 
 pip install -r requirements.txt
+
 jupyter lab Homework_2_Image_Captioning_solved.ipynb
 ```
 
 ---
 
-## Dataset setup
+# 📦 Dataset Setup
 
-Download and extract MS COCO 2017 so the directory looks like this:
+## 📥 Download MS COCO 2017
 
+```bash
+wget http://images.cocodataset.org/zips/train2017.zip
+wget http://images.cocodataset.org/zips/val2017.zip
+wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 ```
+
+## 📂 Extract Files
+
+```bash
+unzip train2017.zip -d coco/images/
+unzip val2017.zip -d coco/images/
+unzip annotations_trainval2017.zip -d coco/
+```
+
+---
+
+# 📁 Expected Folder Structure
+
+```bash
 coco/
 ├── images/
-│   ├── train2017/      # ~118 K images
-│   └── val2017/        #   ~5 K images
+│   ├── train2017/
+│   └── val2017/
 └── annotations/
     ├── captions_train2017.json
     └── captions_val2017.json
 ```
 
-Download links:
+---
 
-```bash
-wget http://images.cocodataset.org/zips/train2017.zip            # ~18 GB
-wget http://images.cocodataset.org/zips/val2017.zip              # ~1 GB
-wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+# 🧪 Notebook Walkthrough
 
-unzip train2017.zip -d coco/images/
-unzip val2017.zip   -d coco/images/
-unzip annotations_trainval2017.zip -d coco/
+| 📘 Section | 🔍 Description               |
+| ---------- | ---------------------------- |
+| 0          | Imports + reproducibility    |
+| 1          | Dataset setup                |
+| 2          | Image transformations        |
+| 3          | Vocabulary + Dataset classes |
+| 4          | Dataset visualisation        |
+| 5          | Full model architecture      |
+| 6          | Loss functions + optimisers  |
+| 7          | Training loop                |
+| 8          | Evaluation + BLEU metrics    |
+| 9          | BLIP baseline                |
+| 10         | BLIP evaluation              |
+| 11         | Final comparison & analysis  |
+
+---
+
+# 📊 Results
+
+## 🎯 BLEU Scores
+
+| Metric | 🧠 Custom Transformer | 🤖 BLIP |
+| ------ | --------------------- | ------- |
+| BLEU-1 | ~0.55                 | ~0.72   |
+| BLEU-2 | ~0.35                 | ~0.53   |
+| BLEU-3 | ~0.22                 | ~0.38   |
+| BLEU-4 | ~0.13                 | ~0.27   |
+
+> ⚠️ Exact scores vary depending on hardware, subset size, and random seed.
+
+---
+
+# 👀 Attention Visualisation
+
+The decoder stores cross-attention weights which are later visualised as heatmaps over the image.
+
+<p align="center">
+  <img src="https://viso.ai/wp-content/uploads/2024/04/attention-mechanism-visualization.jpg" width="700"/>
+</p>
+
+This helps interpret **which image regions influence each generated word**.
+
+---
+
+# 🤖 BLIP Comparison
+
+The project also evaluates:
+
+```python
+Salesforce/blip-image-captioning-base
 ```
 
-> ⚠️ **Hardware note:** The notebook uses `TRAIN_SUBSET = 20000` by default. Set it to `None` to train on the full dataset. A single T4 GPU trains 10 epochs on 20 k images in roughly 3–4 hours.
+against the custom Transformer model using the same BLEU evaluation pipeline.
 
 ---
 
-## Notebook walkthrough
+# 🛠️ Technologies Used
 
-| Section | What happens |
-|---|---|
-| 0 | Imports, device setup, reproducibility seed |
-| 1 | Data paths, optional download commands |
-| 2 | Train / val image transforms (resize, crop, flip, colour jitter, normalise) |
-| 3 | `Vocabulary` class (freq ≥ 5), `COCOCaptionsDataset`, padding `collate_fn` |
-| 4 | Visualise 8 training samples with original + tokenised captions |
-| 5 | Full model definition: `CNNEncoder`, `TransformerDecoderLayer`, `TransformerDecoder`, `ImageCaptioningModel` |
-| 6 | `CrossEntropyLoss` (label smoothing), `AdamW` (two LR groups), `ReduceLROnPlateau` |
-| 7 | Training loop — teacher forcing, gradient clipping, early stopping, checkpoint saving |
-| 8.1 | Load best checkpoint, plot train/val loss curves |
-| 8.2 | Cross-attention heatmaps for 5 validation images |
-| 8.3 | BLEU-1/2/3/4 on 1 000 val samples; 10 sample captions; controllable generation demo |
-| 9 | Load BLIP (`Salesforce/blip-image-captioning-base`) |
-| 10 | Evaluate BLIP with identical BLEU pipeline |
-| 11 | Comparison table + bar chart + side-by-side captions + written analysis |
+| Tool                     | Purpose                         |
+| ------------------------ | ------------------------------- |
+| PyTorch                  | Deep Learning                   |
+| Torchvision              | CNN backbone + image transforms |
+| HuggingFace Transformers | BLIP baseline                   |
+| Matplotlib               | Visualisation                   |
+| NLTK                     | BLEU metrics                    |
+| Docker                   | Reproducible environment        |
 
 ---
 
-## Results (example — 20 k subset, 10 epochs)
+# ⚙️ Training Details
 
-| Metric | Custom model | BLIP |
-|---|---|---|
-| BLEU-1 | ~0.55 | ~0.72 |
-| BLEU-2 | ~0.35 | ~0.53 |
-| BLEU-3 | ~0.22 | ~0.38 |
-| BLEU-4 | ~0.13 | ~0.27 |
-
-*Exact numbers depend on hardware, subset size, and random seed.*
+| Parameter         | Value             |
+| ----------------- | ----------------- |
+| Encoder           | ResNet-50         |
+| Decoder Layers    | 3                 |
+| Attention Heads   | 8                 |
+| Embedding Size    | 512               |
+| Batch Size        | 32                |
+| Optimizer         | AdamW             |
+| Scheduler         | ReduceLROnPlateau |
+| Label Smoothing   | 0.1               |
+| Gradient Clipping | ✅                 |
+| Early Stopping    | ✅                 |
 
 ---
 
-## Requirements
+# 💡 Future Improvements
 
-- Python 3.10+
-- PyTorch 2.2+ (CUDA 11.8 recommended for GPU training)
-- See `requirements.txt` for the full list
+* 🚀 CIDEr / ROUGE / METEOR evaluation
+* 🧠 ViT encoder instead of ResNet
+* ⚡ Mixed precision training
+* 🔍 Better beam search tuning
+* 🌍 Web app deployment
+* 🎤 Speech caption generation
+
+---
+
+# 📸 Example Output
+
+| 🖼️ Image           | 📝 Generated Caption                         |
+| ------------------- | -------------------------------------------- |
+| Dog running in snow | “a dog running through a snowy field”        |
+| People eating pizza | “a group of friends eating pizza at a table” |
+| City street         | “cars driving down a busy city street”       |
+
+---
+
+# 📈 Training Curves
+
+<p align="center">
+  <img src="https://miro.medium.com/v2/resize:fit:1200/1*yk16tgW3iXR53uM1xStI7w.png" width="700"/>
+</p>
+
+---
+
+# ⭐ Why This Project Matters
+
+This project demonstrates:
+
+* Transformer-based sequence generation
+* Attention mechanisms in vision-language tasks
+* Fine-tuning CNN backbones
+* Controlled text generation
+* Explainable AI via attention visualisation
+
+It combines **Computer Vision + NLP + Transformers** into one complete deep learning pipeline.
+
+---
+
+# 🙌 Acknowledgements
+
+* MS COCO Dataset
+* PyTorch Team
+* HuggingFace Transformers
+* Salesforce Research (BLIP)
+
+---
+
+# 📜 License
+
+This project is intended for educational and research purposes.
+
+---
+
+<p align="center">
+  ⭐ If you liked this project, consider starring the repository!
+</p>
